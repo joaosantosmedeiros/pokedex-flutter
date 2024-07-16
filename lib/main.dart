@@ -1,14 +1,10 @@
 // ignore_for_file: use_key_in_widget_constructors
 
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:pokedex_flutter/commom/pokemon_card.dart';
-import 'package:pokedex_flutter/models/pokemon.dart';
-import 'package:pokedex_flutter/service/data_service.dart';
+import 'package:pokedex_flutter/service/pokemon_repository.dart';
 
 void main() => runApp(const MyApp());
-
-final dataService = DataService();
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -48,46 +44,90 @@ class PokemonsList extends StatefulWidget {
 }
 
 class _PokemonsListState extends State<PokemonsList> {
-  late Future<List<Pokemon>> pokemons;
+  late PokemonRepository pokemonRepository;
+  ValueNotifier<bool> loading = ValueNotifier(true);
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
-    pokemons = dataService.fetchPokemons(offset: 0);
+    pokemonRepository = PokemonRepository();
+    loadPokemons();
+    _scrollController = ScrollController();
+    _scrollController.addListener(infinityScrolling);
+  }
+
+  loadPokemons() async {
+    loading.value = true;
+    await pokemonRepository.fetchPokemons();
+    loading.value = false;
+  }
+
+  infinityScrolling() {
+    if (_scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent &&
+        !loading.value) {
+      loadPokemons();
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _scrollController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: pokemons,
+    return AnimatedBuilder(
+        animation: pokemonRepository,
         builder: (context, snapshot) {
-          return ListView.separated(
-            padding: const EdgeInsets.all(10),
-            separatorBuilder: (_, __) => Divider(
-              height: 5,
-              thickness: 2,
-              indent: 10,
-              endIndent: 10,
-              color: Theme.of(context).primaryColor,
-            ),
-            itemCount: snapshot.hasData ? (snapshot.data!.length + 1) : 10,
-            itemBuilder: (_, index) {
-              if (!snapshot.hasData) {
-                return const SizedBox(
-                  height: 100.0,
-                  width: 50.0,
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              if (index == snapshot.data!.length) {
-                return const Center(child: LinearProgressIndicator());
-              }
-
-              var pokemon = snapshot.data![index];
-              return PokemonCard(pokemon: pokemon);
-            },
+          return Stack(
+            children: [
+              ListView.separated(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(10),
+                separatorBuilder: (_, __) => Divider(
+                  height: 5,
+                  thickness: 2,
+                  indent: 10,
+                  endIndent: 10,
+                  color: Theme.of(context).primaryColor,
+                ),
+                itemCount: pokemonRepository.pokemons.length,
+                itemBuilder: (_, index) {
+                  var pokemon = pokemonRepository.pokemons[index];
+                  return PokemonCard(pokemon: pokemon);
+                },
+              ),
+              loadingIndicatorWidget(),
+            ],
           );
+        });
+  }
+
+  loadingIndicatorWidget() {
+    return ValueListenableBuilder(
+        valueListenable: loading,
+        builder: (context, bool isLoading, _) {
+          return isLoading
+              ? Positioned(
+                  left: (MediaQuery.of(context).size.width / 2) - 20,
+                  bottom: 24,
+                  child: const SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircleAvatar(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      ),
+                    ),
+                  ))
+              : Container();
         });
   }
 }
