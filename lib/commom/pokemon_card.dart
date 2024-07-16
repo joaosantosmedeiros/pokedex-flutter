@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pokedex_flutter/models/pokemon.dart';
-import 'package:pokedex_flutter/service/type_to_color.dart';
+import 'package:pokedex_flutter/utils/type_to_color.dart';
 
 class PokemonCard extends StatelessWidget {
   final Pokemon pokemon;
