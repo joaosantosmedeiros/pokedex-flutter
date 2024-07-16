@@ -1,12 +1,18 @@
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:pokedex_flutter/models/pokemon.dart';
 
-class DataService {
-  Future<List<Pokemon>> fetchPokemons({required int offset}) async {
+class PokemonRepository extends ChangeNotifier {
+  int _offset = 0;
+  final List<Pokemon> _pokemons = [];
+
+  List<Pokemon> get pokemons => _pokemons;
+
+  fetchPokemons() async {
     var pokemonsUrlString = await http.read(Uri.parse(
-        "https://pokeapi.co/api/v2/pokemon/?offset=$offset&limit=10"));
+        "https://pokeapi.co/api/v2/pokemon/?offset=$_offset&limit=10"));
 
     var pokemonsUrlJson = jsonDecode(pokemonsUrlString);
 
@@ -15,7 +21,6 @@ class DataService {
         .toList()
         .cast<String>();
 
-    List<Pokemon> pokemons = [];
 
     for (var url in pokemonsUrl) {
       var rawPokemonString = await http.read(Uri.parse(url));
@@ -40,9 +45,9 @@ class DataService {
               .cast<String>(),
           height: rawPokemon['height'] * 10 / 100,
           weight: (rawPokemon['weight']) / 10);
-      pokemons.add(pokemon);
+      _pokemons.add(pokemon);
     }
-
-    return pokemons;
+    _offset += 10;
+    notifyListeners();
   }
 }
