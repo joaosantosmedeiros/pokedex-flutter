@@ -61,8 +61,8 @@ class PokemonCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: Color.fromARGB(
                               255,
-                              (TypeToColor.convert(type)[0] * 1.05).toInt(),
-                              (TypeToColor.convert(type)[1] * 1.05).toInt(),
+                              (TypeToColor.convert(type)[0] * 1.03).toInt(),
+                              (TypeToColor.convert(type)[1] * 1.1).toInt(),
                               (TypeToColor.convert(type)[2] * 1.05).toInt(),
                             ),
                             borderRadius:
