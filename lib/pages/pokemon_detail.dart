@@ -1,3 +1,5 @@
+// ignore_for_file: use_key_in_widget_constructors
+
 import 'package:flutter/material.dart';
 import 'package:pokedex_flutter/models/pokemon.dart';
 import 'package:pokedex_flutter/utils/type_to_color.dart';
@@ -17,6 +19,7 @@ class PokemonDetail extends StatelessWidget {
 
     return Scaffold(
         appBar: AppBar(
+            iconTheme: const IconThemeData(color: Colors.white),
             backgroundColor: mainColor,
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
