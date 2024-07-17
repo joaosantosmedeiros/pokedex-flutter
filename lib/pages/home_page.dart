@@ -1,6 +1,9 @@
+// ignore_for_file: use_key_in_widget_constructors
 
 import 'package:flutter/material.dart';
+import 'package:pokedex_flutter/commom/loading_widget.dart';
 import 'package:pokedex_flutter/commom/pokemon_card.dart';
+import 'package:pokedex_flutter/pages/search_page.dart';
 import 'package:pokedex_flutter/service/pokemon_repository.dart';
 
 class HomePage extends StatelessWidget {
@@ -8,12 +11,26 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.red,
-          title: const Text(
-            "Flutter Pokedex",
-            style: TextStyle(color: Colors.white, fontFamily: 'Pokemon'),
-          ),
-        ),
+            backgroundColor: Colors.red,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Flutter Pokedex",
+                  style: TextStyle(color: Colors.white, fontFamily: 'Pokemon'),
+                ),
+                IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SearchPage()));
+                  },
+                  icon: const Icon(Icons.search_rounded),
+                  color: Colors.white,
+                )
+              ],
+            )),
         body: PokemonsList());
   }
 }
@@ -59,6 +76,7 @@ class _PokemonsListState extends State<PokemonsList> {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width / 2 - 110;
     return AnimatedBuilder(
         animation: pokemonRepository,
         builder: (context, snapshot) {
@@ -70,44 +88,27 @@ class _PokemonsListState extends State<PokemonsList> {
                 separatorBuilder: (_, __) => Divider(
                   height: 5,
                   thickness: 2,
-                  indent: 10,
-                  endIndent: 10,
+                  indent: width,
+                  endIndent: width,
                   color: Theme.of(context).primaryColor,
                 ),
                 itemCount: pokemonRepository.pokemons.length,
                 itemBuilder: (_, index) {
                   var pokemon = pokemonRepository.pokemons[index];
-                  return PokemonCard(pokemon: pokemon);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 260,
+                        child: PokemonCard(pokemon: pokemon),
+                      )
+                    ],
+                  );
                 },
               ),
-              loadingIndicatorWidget(),
+              loadingIndicatorWidget(loading),
             ],
           );
-        });
-  }
-
-  loadingIndicatorWidget() {
-    return ValueListenableBuilder(
-        valueListenable: loading,
-        builder: (context, bool isLoading, _) {
-          return isLoading
-              ? Positioned(
-                  left: (MediaQuery.of(context).size.width / 2) - 20,
-                  bottom: 24,
-                  child: const SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: CircleAvatar(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
-                      ),
-                    ),
-                  ))
-              : Container();
         });
   }
 }
