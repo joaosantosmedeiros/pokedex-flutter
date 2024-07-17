@@ -7,8 +7,10 @@ import 'package:pokedex_flutter/models/pokemon.dart';
 class PokemonRepository extends ChangeNotifier {
   int _offset = 0;
   final List<Pokemon> _pokemons = [];
+  final List<Pokemon> _searchedPokemon = [];
 
   List<Pokemon> get pokemons => _pokemons;
+  List<Pokemon> get searchedPokemon => _searchedPokemon;
 
   fetchPokemons() async {
     var pokemonsUrlString = await http.read(Uri.parse(
@@ -20,7 +22,6 @@ class PokemonRepository extends ChangeNotifier {
         .map((pokemon) => pokemon['url'].toString())
         .toList()
         .cast<String>();
-
 
     for (var url in pokemonsUrl) {
       var rawPokemonString = await http.read(Uri.parse(url));
@@ -48,6 +49,40 @@ class PokemonRepository extends ChangeNotifier {
       _pokemons.add(pokemon);
     }
     _offset += 10;
+    notifyListeners();
+  }
+
+  fetchOnePokemon(String pokemonName) async {
+    _searchedPokemon.clear();
+    try {
+      var pokemonString = await http
+          .read(Uri.parse("https://pokeapi.co/api/v2/pokemon/$pokemonName"));
+
+      var rawPokemon = jsonDecode(pokemonString);
+
+      Pokemon pokemon = Pokemon(
+          id: rawPokemon['id'],
+          name: rawPokemon['name'],
+          imageUrl: rawPokemon['sprites']['other']['official-artwork']
+                  ['front_default']
+              .toString(),
+          abilities: rawPokemon['abilities']
+              .map((ability) => ability['ability']['name'])
+              .toList()
+              .cast<String>(),
+          stats: {
+            for (var item in rawPokemon['stats'])
+              item['stat']['name'].toString(): item['base_stat']
+          },
+          types: rawPokemon['types']
+              .map((type) => type['type']['name'].toString())
+              .toList()
+              .cast<String>(),
+          height: rawPokemon['height'] * 10 / 100,
+          weight: (rawPokemon['weight']) / 10);
+
+      _searchedPokemon.add(pokemon);
+    } catch (_) {}
     notifyListeners();
   }
 }
